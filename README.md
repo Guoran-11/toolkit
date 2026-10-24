@@ -714,7 +714,8 @@ python -m venv .venv
 
 ## 许可
 
-本项目自身代码为私有许可。注意其**第三方依赖**的许可差异：
+本项目自身代码以 **Apache License 2.0** 发布，全文见 [LICENSE](LICENSE)。
+注意其**第三方依赖**的许可差异：
 
 - PyMuPDF：**AGPL-3.0**（对外提供 SaaS 或闭源分发前需评估）
 - mutagen：**GPL-2.0**
