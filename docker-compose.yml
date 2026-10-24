@@ -1,0 +1,90 @@
+# ============================================================================
+# 全能工具站（ToolKit）—— 单机/内网部署编排
+#
+# 快速开始：
+#     cp .env.example .env      # 按需修改
+#     docker compose up -d --build
+#     浏览器打开 http://<主机IP>:5000
+#
+# 首次启动会在日志里打印自动生成的管理员密码：
+#     docker compose logs -f toolkit | grep 密码
+# ============================================================================
+
+services:
+  toolkit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 置 1 会在镜像内安装 LibreOffice + FFmpeg（镜像增大 ~700MB），
+        # 换取 Office 互转 / Office→PDF / 音频转码的完整能力。
+        - WITH_ENGINES=${WITH_ENGINES:-0}
+    image: toolkit:1.0.0
+    container_name: toolkit
+    restart: unless-stopped
+
+    # 默认只绑本机回环，如需内网访问改为 "0.0.0.0:5000:5000"
+    # 注意：一旦对外暴露，务必确保 TOOLKIT_AUTH_REQUIRED=true（见 .env.example）
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${HOST_PORT:-5000}:5000"
+
+    environment:
+      # 容器内必须监听所有网卡，否则端口映射不通
+      TOOLKIT_HOST: "0.0.0.0"
+      TOOLKIT_PORT: "5000"
+      # 鉴权：对外提供服务时保持 true
+      TOOLKIT_AUTH_REQUIRED: "${AUTH_REQUIRED:-true}"
+      TOOLKIT_USERNAME: "${ADMIN_USERNAME:-admin}"
+      # 初始密码。留空则首次启动自动生成并打印到日志
+      TOOLKIT_PASSWORD: "${ADMIN_PASSWORD:-}"
+      TOOLKIT_MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-100}"
+      TOOLKIT_MAX_AUDIO_UPLOAD_MB: "${MAX_AUDIO_UPLOAD_MB:-200}"
+      TOOLKIT_WORKERS: "${WORKERS:-4}"
+      TOOLKIT_OUTPUT_TTL_HOURS: "${OUTPUT_TTL_HOURS:-24}"
+      TOOLKIT_SSH_ENABLED: "${SSH_ENABLED:-false}"
+      # 视频下载：容器属对外暴露形态，默认关闭，由部署者显式开启（PRD 10.5）
+      TOOLKIT_VIDEO_ENABLED: "${VIDEO_ENABLED:-false}"
+      TOOLKIT_VIDEO_MAX_CONCURRENT: "${VIDEO_MAX_CONCURRENT:-2}"
+      TOOLKIT_VIDEO_MAX_FILE_MB: "${VIDEO_MAX_FILE_MB:-2048}"
+      TZ: "${TZ:-Asia/Shanghai}"
+
+    volumes:
+      # 产物与上传落在这里；务必用卷持久化，否则重启丢产物
+      - toolkit-storage:/app/storage
+      # 离线引擎（LibreOffice / FFmpeg / Chromium）可挂载宿主目录复用，
+      # 免去把 700MB 打进镜像。挂载后同步改 config.toml 的 engines 路径。
+      # - ./runtime:/app/runtime:ro
+      # 挂载自定义配置以覆盖镜像内默认值
+      # - ./config.toml:/app/config.toml:ro
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/healthz',timeout=3).status==200 else 1)"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+    # 资源约束：LibreOffice 转换是内存大户，防止单个任务拖垮宿主机
+    deploy:
+      resources:
+        limits:
+          cpus: "${CPU_LIMIT:-2.0}"
+          memory: "${MEM_LIMIT:-2g}"
+
+    # 转换会 fork 子进程（soffice / ffmpeg），需要额外的进程额度
+    security_opt:
+      - no-new-privileges:true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  toolkit-storage:
+    driver: local

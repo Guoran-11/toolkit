@@ -1,0 +1,376 @@
+/* ==========================================================================
+   layout.css — 应用外壳骨架
+   结构：.app 三段栅格 [顶栏 / 主体 / 状态栏]，高度锁定 100dvh。
+   主体内部：每个 .view 是一个独立面板容器（左参数区 + 右结果区），
+   左面板宽度由 --panel-w 变量控制，可拖拽调整（见 js/ui.js SplitPane）。
+   ========================================================================== */
+
+/* ---------- 1. 外壳栅格 ---------- */
+.app {
+  display: grid;
+  /*
+    grid-template-columns 必须显式声明为 minmax(0, 1fr)。
+    原因：只声明 grid-template-rows 时，隐式列宽度为 auto，会按「最大内容宽度」
+    撑开——顶栏导航与状态栏的 nowrap 文本会把整个外壳顶到比视口更宽，
+    在小屏上出现横向溢出。minmax(0, 1fr) 让列宽严格跟随容器并允许内部收缩。
+  */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--h-topbar) 1fr auto;
+  height: 100dvh;      /* dvh：移动端地址栏收缩时不产生溢出滚动 */
+  overflow: hidden;
+}
+
+/* ---------- 1.1 登录门禁：未登录时只显示登录页 ----------
+   状态由 <html data-app-gate> 承载（见 index.html 的注释）：
+     locked —— 默认值，控制面板整体不可见；
+     open   —— 已登录，正常显示面板、门禁页消失。
+   做成 CSS 属性选择器而不是靠 JS 改 display，是为了把「首帧不闪面板」变成
+   样式层面的保证：脚本尚未执行时，面板就已经是隐藏的。 */
+html[data-app-gate="locked"] .app { display: none !important; }
+html[data-app-gate="open"] .auth-gate { display: none !important; }
+
+.auth-gate {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--sp-6);
+  background: var(--bg-canvas);
+}
+/*
+  上面这条 display:grid 是作者样式，会盖掉浏览器默认的 [hidden]{display:none}。
+  而 app.js 在登录抽屉弹出后正是用 hidden 把这个静态占位页藏起来的——
+  不补这条规则，它那颗大号品牌方块会一直从抽屉上方露出来。
+*/
+.auth-gate[hidden] { display: none !important; }
+.auth-gate-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 420px;
+  text-align: center;
+}
+.auth-gate-mark { width: 48px; height: 48px; font-size: var(--fs-xl); }
+.auth-gate-title {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+}
+.auth-gate-sub {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: var(--lh-base);
+}
+
+/* ---------- 2. 顶栏 ---------- */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: var(--z-sticky);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 0 0 auto;
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-tight);
+  text-decoration: none;
+}
+.brand:hover { text-decoration: none; }
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--blue-500), var(--violet-500));
+  color: #fff;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  flex: 0 0 auto;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-name { font-size: var(--fs-md); }
+.brand-ver {
+  font-size: 10px;
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+  letter-spacing: var(--ls-wide);
+}
+
+/* 主导航：横向可滚动，窄屏不换行挤压 */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.app-nav::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+.nav-item:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.nav-item[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.nav-item .icon { flex: 0 0 auto; }
+/* 导航徽标（未读/进行中任务数） */
+.nav-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  line-height: 18px;
+  text-align: center;
+}
+.nav-badge[data-variant="danger"] { background: var(--danger); color: #fff; }
+.nav-badge[data-variant="success"] { background: var(--success); color: #fff; }
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 0 0 auto;
+}
+
+/* 引擎健康指示灯（L-O / Chromium / FFmpeg 可用性） */
+.engine-dots { display: flex; align-items: center; gap: var(--sp-2); }
+.engine-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  cursor: default;
+}
+.engine-dot::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: var(--border-strong);
+  flex: 0 0 auto;
+}
+.engine-dot[data-state="ok"]::before   { background: var(--success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent); }
+.engine-dot[data-state="warn"]::before { background: var(--warning); }
+.engine-dot[data-state="fail"]::before { background: var(--danger); }
+
+/* ---------- 3. 主体区 ---------- */
+.app-main {
+  position: relative;
+  min-height: 0;   /* 关键：栅格子项默认 min-height:auto 会撑破容器，导致内部滚动失效 */
+  overflow: hidden;
+  background: var(--bg-canvas);
+}
+
+/* 视图容器：默认隐藏，仅激活态参与布局 */
+.view {
+  display: none;
+  height: 100%;
+  min-height: 0;
+}
+.view.is-active { display: grid; }
+
+/* 双栏视图：左参数面板 + 右结果面板，中间可拖拽分隔 */
+.view--split {
+  grid-template-columns: var(--panel-w, var(--w-panel)) 6px minmax(0, 1fr);
+}
+.view--single { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- 4. 面板 ---------- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-surface);
+}
+.panel--left  { border-right: 1px solid var(--border-subtle); }
+.panel--right { background: var(--bg-canvas); }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex: 0 0 auto;
+  min-height: 46px;
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+.panel-header h2,
+.panel-header .panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;      /* 允许在 flex 容器中收缩，否则 nowrap 标题会把面板撑宽 */
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-actions { display: flex; align-items: center; gap: var(--sp-1); flex: 0 0 auto; }
+
+/* 面板主体：唯一滚动容器 */
+.panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* 阻止滚动穿透到父级 */
+  padding: var(--sp-4);
+}
+.panel-body--flush { padding: 0; }
+.panel-body--grid  { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+/* 面板底部固定操作区（不随内容滚动） */
+.panel-footer {
+  flex: 0 0 auto;
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+/* 分组：带标题的表单区块 */
+.form-section { display: flex; flex-direction: column; gap: var(--sp-3); }
+.form-section + .form-section {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--border-subtle);
+}
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---------- 5. 拖拽分隔条 ---------- */
+.splitter {
+  position: relative;
+  cursor: col-resize;
+  background: var(--border-subtle);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.splitter::after {
+  /* 扩大命中区到 12px，视觉仍是 6px（Fitts 定律：细线难以精准命中） */
+  content: "";
+  position: absolute;
+  inset: 0 -3px;
+}
+.splitter:hover,
+.splitter.is-dragging { background: var(--accent); }
+/* 键盘可调的拖拽条：左右方向键微调面板宽度 */
+.splitter:focus-visible { background: var(--accent); outline-offset: 0; }
+
+/* ---------- 6. 底部状态栏 ---------- */
+.app-statusbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--h-statusbar);
+  padding: 0 var(--sp-4);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  z-index: var(--z-sticky);
+  /* 极窄屏下内容可能宽于视口：允许横向滚动而不是溢出或换行 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.app-statusbar::-webkit-scrollbar { display: none; }
+.statusbar-sep { width: 1px; height: 14px; flex: 0 0 auto; background: var(--border-subtle); }
+.statusbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+  min-width: 0;
+}
+/* 文本类信息在空间不足时截断，而不是把状态栏撑宽 */
+.statusbar-item > span:not(.engine-dot) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 全局任务进度（常驻，无任务时隐藏） */
+.statusbar-progress { display: flex; align-items: center; gap: var(--sp-3); min-width: 180px; max-width: 420px; flex: 0 1 auto; }
+.statusbar-progress[hidden] { display: none; }
+
+/* ---------- 7. 响应式：≤1024px 改为上下堆叠 ---------- */
+@media (max-width: 1024px) {
+  .view--split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(220px, 42%) 6px minmax(0, 1fr);
+  }
+  .splitter { cursor: row-resize; }
+  .splitter::after { inset: -3px 0; }
+  .panel--left {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .panel-header { min-height: 42px; }
+}
+
+/* 窄屏：顶栏导航下沉为独立一行，品牌文字隐藏 */
+@media (max-width: 720px) {
+  :root { --h-topbar: 52px; --h-statusbar: 30px; }
+  .app-topbar { flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); }
+  .brand-text { display: none; }
+  .engine-dots .engine-dot span { display: none; }
+  .app-statusbar { gap: var(--sp-3); padding: 0 var(--sp-3); }
+  .statusbar-item--optional { display: none; }
+  .panel-body { padding: var(--sp-3); }
+  /* 状态文本限宽并截断，"演示模式（未连接后端）"在手机上过长 */
+  #status-mode { max-width: 42vw; }
+  .statusbar-progress { min-width: 120px; }
+}
+
+/* 超窄屏（手机竖屏）：导航占满整行 */
+@media (max-width: 560px) {
+  .app-nav { order: 3; width: 100%; flex: 1 0 100%; }
+  .nav-item { padding: 0 var(--sp-2); }
+  .nav-item .nav-label { font-size: var(--fs-sm); }
+  .statusbar-sep { display: none; }
+}

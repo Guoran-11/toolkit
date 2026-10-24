@@ -1,0 +1,74 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "from": "local",
+    "result": "suee",
+    "message": "",
+    "quality": 64,
+    "format": "flv720",
+    "timelength": 240000,
+    "accept_format": "hdflv2,flv,flv720,flv480,mp4",
+    "accept_quality": [80, 64, 32],
+    "support_formats": [
+      {"quality": 80, "new_description": "1080P 高清", "display_desc": "1080P"},
+      {"quality": 64, "new_description": "720P 高清", "display_desc": "720P"},
+      {"quality": 32, "new_description": "480P 清晰", "display_desc": "480P"}
+    ],
+    "dash": {
+      "duration": 240,
+      "minBufferTime": 1.5,
+      "video": [
+        {
+          "id": 64,
+          "baseUrl": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30064.m4s",
+          "base_url": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30064.m4s",
+          "backupUrl": [],
+          "backup_url": [],
+          "bandwidth": 1200000,
+          "mimeType": "video/mp4",
+          "mime_type": "video/mp4",
+          "codecs": "avc1.64001F",
+          "width": 1280,
+          "height": 720,
+          "frameRate": "30",
+          "frame_rate": "30",
+          "codecid": 7,
+          "size": 23000000
+        },
+        {
+          "id": 32,
+          "baseUrl": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30032.m4s",
+          "base_url": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30032.m4s",
+          "backupUrl": [],
+          "backup_url": [],
+          "bandwidth": 600000,
+          "mimeType": "video/mp4",
+          "mime_type": "video/mp4",
+          "codecs": "avc1.64001E",
+          "width": 852,
+          "height": 480,
+          "frameRate": "30",
+          "frame_rate": "30",
+          "codecid": 7,
+          "size": 11000000
+        }
+      ],
+      "audio": [
+        {
+          "id": 30280,
+          "baseUrl": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30280.m4s",
+          "base_url": "https://upos-sz-mirrorcos.bilivideo.com/example/login-30280.m4s",
+          "backupUrl": [],
+          "backup_url": [],
+          "bandwidth": 320000,
+          "mimeType": "audio/mp4",
+          "mime_type": "audio/mp4",
+          "codecs": "mp4a.40.2"
+        }
+      ]
+    },
+    "durl": []
+  }
+}

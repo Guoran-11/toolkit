@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>晚风里的一百种蓝 - 抖音</title>
+  <!--
+    自造脱敏样本：模拟「带匿名访客 Cookie（ttwid）时」的分享页结构。
+    与 router_data_video.html 的区别：这里的作品数据位于
+    loaderData["video_(id)/page"].videoInfoRes.item_list（无 ttwid 时该字段不出现）。
+    页面刻意不含 og:* 标签，避免用例被元信息降级链「兜底通过」而掩盖 JSON 解析问题。
+    所有 ID / 昵称 / 地址均为虚构，仅用于离线测试。
+  -->
+</head>
+<body>
+<div id="root"></div>
+<script>
+window._ROUTER_DATA = {
+  "loaderData": {
+    "video_(id)/page": {
+      "videoInfoRes": {
+        "extra": {
+          "now": 1760000000000,
+          "logid": "2026102100000000000000000000"
+        },
+        "filter_list": [],
+        "is_oversea": false,
+        "item_list": [
+          {
+            "aweme_id": "7412345678901234567",
+            "aweme_type": 0,
+            "desc": "晚风里的一百种蓝 #风景 #自造样本",
+            "create_time": 1760000000,
+            "author": {
+              "nickname": "示例作者",
+              "sec_uid": "MS4wLjABAAAAexamplesecuid",
+              "avatar_thumb": {
+                "url_list": [
+                  "https://p3.douyinpic.com/aweme/100x100/example-avatar.jpeg",
+                  "https://p9.douyinpic.com/aweme/100x100/example-avatar.jpeg"
+                ]
+              }
+            },
+            "video": {
+              "duration": 151000,
+              "width": 1920,
+              "height": 1080,
+              "fps": 30,
+              "ratio": "1080p",
+              "bit_rate": [
+                {
+                  "gear_name": "1080p",
+                  "quality_type": 1,
+                  "bit_rate": 2500000,
+                  "fps": 30,
+                  "play_addr": {
+                    "uri": "v0200fg10000example1080",
+                    "url_list": ["https://v3-dy-o.zjcdn.com/example/video-1080.mp4"],
+                    "width": 1920,
+                    "height": 1080,
+                    "data_size": 47180000
+                  }
+                },
+                {
+                  "gear_name": "720p",
+                  "quality_type": 2,
+                  "bit_rate": 1200000,
+                  "fps": 30,
+                  "play_addr": {
+                    "uri": "v0200fg10000example720",
+                    "url_list": ["https://v3-dy-o.zjcdn.com/example/video-720.mp4"],
+                    "width": 1280,
+                    "height": 720,
+                    "data_size": 22650000
+                  }
+                }
+              ],
+              "play_addr": {
+                "uri": "v0200fg10000example",
+                "url_list": ["https://v3-dy-o.zjcdn.com/example/video.mp4"],
+                "width": 1920,
+                "height": 1080,
+                "data_size": 47180000
+              },
+              "cover": {
+                "url_list": ["https://p3-douyinpic.com/example-cover.jpeg"]
+              },
+              "origin_cover": {
+                "url_list": ["https://p3-douyinpic.com/example-origin-cover.jpeg"]
+              }
+            },
+            "images": [],
+            "statistics": {
+              "digg_count": 1200,
+              "comment_count": 34,
+              "share_count": 12,
+              "play_count": 56000
+            },
+            "video_control": {"allow_download": true},
+            "is_ads": false
+          }
+        ],
+        "status_code": 0
+      },
+      "isSpider": false,
+      "itemId": "7412345678901234567",
+      "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+    }
+  },
+  "errors": null
+};
+</script>
+</body>
+</html>

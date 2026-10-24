@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+  data-app-gate="locked" —— 主界面登录门禁的初始状态，**必须写死在 HTML 里**。
+  理由：面板内容由 JS 渲染，但外壳（顶栏/导航/状态栏）是静态标记；若只靠脚本
+  在读取 localStorage 后再隐藏，首帧仍会闪出面板骨架。写在文档根元素上，
+  样式表即可在第一次绘制前就把它藏起来。
+  app.js 在确认登录态后改为 "open"，登录页（.auth-gate）随之隐藏。
+-->
+<html lang="zh-CN" data-app-gate="locked" data-page-node-id="MI30KtQkKbycxwmhJsQZuX">
+<head data-page-node-id="DcIwjmAtOqvgMXHDXq0yWL">
+  <meta charset="utf-8" data-page-node-id="MO8eUXrocOX5jCH4eZqIlO">
+  <!-- viewport-fit=cover：配合 env(safe-area-inset-*) 处理刘海屏安全区 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" data-page-node-id="6ZNiRQTWBvYz0NhZkzBr7w">
+
+  <title>全能工具站 · 文档转换 / SSH 终端 / 音频转换 / Markdown 预览 / 地图定位</title>
+
+  <meta name="description" content="自托管的本地文件处理工具站：HTML/Office/PDF 互转、浏览器内 SSH 终端、音频格式转换、Markdown 预览、经纬度地图定位。文件全程本地处理，不上传第三方。" data-page-node-id="OiZsklzcyG09dzgE6JqQdx">
+  <meta name="robots" content="noindex, nofollow" data-page-node-id="gAZgV7QwmKJFuFw19XyqYS">
+  <meta name="theme-color" content="#f4f6fa" data-page-node-id="LHaaw2H6asaz03RmaOJLo3">
+  <meta name="color-scheme" content="light dark" data-page-node-id="CbNHFG298NSL8iPbZJUq5g">
+  <meta name="format-detection" content="telephone=no" data-page-node-id="6WCzucEeNzqiDIyYHG0Vpb">
+
+  <!-- PWA / 移动端添加到主屏 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" data-page-node-id="yCrw3dVbAFBVKFqcHjCTdA">
+  <!-- Android 添加到主屏后以独立窗口打开，不再显示浏览器地址栏 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" data-page-node-id="Zn7fSeOn4IytabwUWLOmcE">
+  <meta name="apple-mobile-web-app-title" content="全能工具站" data-page-node-id="W0wA8aOg07wqddgFWvNhiy">
+
+  <!-- 图标：内联 SVG data URI，避免额外请求（离线可用） -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 20h13l-3-3M24 12H11l3 3' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" data-page-node-id="mUHs9GzVMziFRM92SwSIHN">
+
+  <!--
+    样式加载顺序不可调换：
+    tokens（变量） → base（重置） → layout（骨架） → components（组件） → views（业务）
+    → mobile（手机适配层）
+    每个文件只负责一层，后续文件依赖前面的变量与基线。
+    mobile.css 必须排在最后：它整层覆盖前层的布局规则，删掉它即回到桌面版。
+  -->
+  <link rel="stylesheet" href="css/tokens.css" data-page-node-id="sKBiFs1hrWHBfMuH6JvcpV">
+  <link rel="stylesheet" href="css/base.css" data-page-node-id="yuRGgDHQo7yenRfY1U4qec">
+  <link rel="stylesheet" href="css/layout.css" data-page-node-id="pMHoTjTblkEEHfYBWnkkyB">
+  <link rel="stylesheet" href="css/components.css" data-page-node-id="V8BwoZuwAnvCydcjKlq4zy">
+  <link rel="stylesheet" href="css/views.css" data-page-node-id="xjJr2cvzk3DDPEKgTa7mIG">
+  <link rel="stylesheet" href="css/mobile.css">
+
+  <!--
+    主题预置脚本必须同步执行且位于样式之后、正文之前：
+    在首帧绘制前确定 data-theme，消除暗色偏好用户的白屏闪烁。
+    外置文件而非内联是为了让后端可以下发严格的 CSP（script-src 'self'）。
+  -->
+  <script src="js/theme-boot.js"></script>
+
+  <noscript data-page-node-id="xD7CyDnyMtGfuNun5dCACP">
+    <style>
+      /* 无 JS 时外壳与登录页都不会工作，只保留下面的「需要启用 JavaScript」提示 */
+      .app, .auth-gate { display: none !important; }
+      .noscript-banner { display: block !important; }
+    </style>
+  </noscript>
+</head>
+
+<body data-page-node-id="wdRY6mDEVeb2b2jEjM3yNi">
+  <!-- 键盘用户的第一个 Tab 落点，直接跳过导航进入主内容 -->
+  <a class="skip-link" href="#main" data-page-node-id="nPv240ggriwpcG4MHyBxQy">跳到主内容</a>
+
+  <!-- 无 JS 环境下的降级提示 -->
+  <div class="noscript-banner" hidden style="display:none;padding:24px;margin:24px auto;max-width:640px;border:1px solid #d97706;background:#fdf3e2;border-radius:12px;color:#7c2d12;font-family:system-ui,sans-serif" data-page-node-id="tb3GgzQlCMfkQQY4ClniWv">
+    <strong data-page-node-id="9luc0GPi05AmcZhEQ3Buk7">需要启用 JavaScript</strong>
+    <p style="margin:8px 0 0" data-page-node-id="eaYDtFSMZAzz9yYWrt2AwR">全能工具站是单页应用，界面交互与文件处理均依赖 JavaScript。请在浏览器设置中启用 JavaScript 后刷新页面。</p>
+  </div>
+
+  <!--
+    登录门禁页（未登录时唯一可见的界面）。
+    默认可见：<html data-app-gate="locked"> 时由 layout.css 显示本容器、隐藏 .app。
+    JS 就绪后会以弹窗形式接管（复用 app.js 的登录/注册/找回密码表单），
+    这里保留的静态内容用于覆盖「样式已渲染、脚本尚未执行」的那一小段空窗，
+    以及脚本加载失败时的可诊断提示。
+  -->
+  <div class="auth-gate" id="auth-gate" role="status" aria-live="polite" data-page-node-id="9Kf2QmZt7xB1vLn4Hs8RcE">
+    <div class="auth-gate-inner">
+      <span class="brand-mark auth-gate-mark" aria-hidden="true">TK</span>
+      <p class="auth-gate-title">全能工具站</p>
+      <p class="auth-gate-sub" id="auth-gate-sub">正在检查登录状态…</p>
+    </div>
+  </div>
+
+  <div class="app" data-page-node-id="9VeIpctTK5qcvjKDXhKf1U">
+    <!-- ============ 顶栏 ============ -->
+    <header class="app-topbar" data-page-node-id="0Cuc2Btjeagxa8iIgAjmjg">
+      <a class="brand" href="#/converter" aria-label="全能工具站 首页" data-page-node-id="ExadCWIZMqzGCI8TTkezX2">
+        <span class="brand-mark" aria-hidden="true" data-page-node-id="CVIviI2auKKSLWTAncvFh0">TK</span>
+        <span class="brand-text" data-page-node-id="FiEoaVYNUYs8t2OvhtLA2C">
+          <span class="brand-name" data-page-node-id="E2pLntAtlGLK6sR1C273iX">全能工具站</span>
+          <span class="brand-ver" id="brand-version" data-page-node-id="0P1tdWHWY2muGzFq3VXcpX">v1.0.0</span>
+        </span>
+      </a>
+
+      <!-- 主导航：路由由 hash 驱动，aria-current 标记当前位置 -->
+      <nav class="app-nav" id="app-nav" aria-label="主导航" data-page-node-id="J451Rg5IfgTPshJ37C37ER"></nav>
+
+      <div class="app-topbar-actions" data-page-node-id="eKkCVgmQ6RGKRgB976cGu3">
+        <!-- 引擎健康状态：LibreOffice / Chromium / FFmpeg -->
+        <div class="engine-dots" id="engine-dots" role="status" aria-label="转换引擎状态" data-page-node-id="cAVo9DD0aHYwtCQpB4B6iG"></div>
+
+        <button class="btn btn--sm btn--icon btn--ghost" type="button" id="theme-toggle"
+                aria-label="切换主题" data-tip="切换主题（浅色 / 深色 / 跟随系统）" data-page-node-id="3iSvHTkR8cqCNBCCWHz7v2">
+          <span id="theme-toggle-icon" aria-hidden="true" data-page-node-id="jXVEPmnhUCupVmrkgqBYn0"></span>
+        </button>
+
+        <button class="btn btn--sm btn--ghost" type="button" id="auth-button" hidden data-page-node-id="or4zS5sN4j6OKxFUUtcW7F">
+          <span id="auth-button-label" data-page-node-id="zBXoOauEvlzO7h7REgqfWA">登录</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ 主体：视图由路由注入 ============ -->
+    <main class="app-main" id="main" tabindex="-1" data-page-node-id="PKYgq7lHsTPgbYW3PN6uLq"></main>
+
+    <!-- ============ 状态栏 ============ -->
+    <footer class="app-statusbar" data-page-node-id="du2s9FEqLxshYGw8jR1AeT">
+      <span class="statusbar-item" data-page-node-id="mFWfDdO62LgSO2O9NqBV5K">
+        <span id="status-mode-dot" class="engine-dot" data-state="unknown" aria-hidden="true" data-page-node-id="YhoGBEXPEKjWB7pCUn7I9R"></span>
+        <span id="status-mode" data-page-node-id="iU3HRQZ5tVx0Ds55JArcwB">正在检测服务端…</span>
+      </span>
+
+      <span class="statusbar-sep" aria-hidden="true" data-page-node-id="U3HSqJyNCCA4XZqmPyQezo"></span>
+
+      <span class="statusbar-progress" id="statusbar-progress" hidden data-page-node-id="HMTKFPeiciGLDUQKMpMa6y">
+        <span class="t-xs" id="statusbar-progress-label" data-page-node-id="nIAqTTiNWigyX5jcHNC5WL">任务进行中</span>
+        <span class="progress progress--sm" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+              aria-valuenow="0" id="statusbar-progress-bar" data-page-node-id="qFvsujPmDjEcYUAzGpwPCZ">
+          <span class="progress-bar" data-page-node-id="TMGEUzQffw60ChIWmLqCGL"></span>
+        </span>
+        <span class="t-xs t-mono" id="statusbar-progress-pct" data-page-node-id="IBphBOCPzFM6r5I2HMoAQx">0%</span>
+      </span>
+
+      <span class="grow" data-page-node-id="WRQeBSzxEP8RXFdUUJmq64"></span>
+
+      <span class="statusbar-item statusbar-item--optional" data-page-node-id="8TmVF5JNF23poKbJjBmwTv">
+        <span id="status-disk" data-page-node-id="mE4KUqdeugvpnhMVQHyEyS">磁盘 —</span>
+      </span>
+
+      <span class="statusbar-sep statusbar-item--optional" aria-hidden="true" data-page-node-id="9JwZlPa3Xm0suBLjHlqc6x"></span>
+
+      <span class="statusbar-item statusbar-item--optional" data-page-node-id="1FeGg8BVEEzOZ77iOGTHfA">
+        <kbd data-page-node-id="IH3866DHJOd5BgzmRDmeb0">?</kbd><span data-page-node-id="w8903lwswJeDcLfyhLJJVZ">快捷键</span>
+      </span>
+    </footer>
+  </div>
+
+  <!-- 全局 Toast 区域（aria-live 由 ui.js 设置） -->
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite" aria-atomic="false" data-page-node-id="0ta67eeRSNJAysH1p6xy5n"></div>
+
+  <!--
+    启动守卫的挂载点。默认隐藏，仅在应用未能启动时由 boot-guard.js 显示。
+    存在的意义：ES Module 在 file:// 协议下会被浏览器拦截且不报可见错误，
+    没有这个兜底，用户看到的会是一片无法自我诊断的空白。
+  -->
+  <div id="boot-fallback" role="alert" hidden></div>
+
+  <!--
+    启动守卫。必须是 classic script（非 module）——app.js 模块在 file:// 下加载不到时，
+    它是页面上唯一还能执行的脚本。因此它排在模块之前，且不依赖任何其他文件。
+  -->
+  <script src="js/boot-guard.js"></script>
+
+  <!-- 应用入口。type=module 天然 defer，DOM 就绪后才执行 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

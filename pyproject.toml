@@ -1,0 +1,114 @@
+[project]
+name = "toolkit"
+version = "1.0.0"
+description = "全能工具站 —— 自托管的本地文件处理工具站（文档转换 / SSH 终端 / 音频转换 / Markdown 预览）"
+readme = "README.md"
+# 3.11 是下限：本项目的配置层使用了标准库 tomllib（3.11 才有）。
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+
+# 运行时依赖的权威来源是 requirements.txt / requirements-core.txt，
+# 这里只做声明以便 `pip install .` 与工具链识别，避免两处维护漂移。
+dependencies = [
+    "fastapi>=0.115.0,<1.0",
+    "uvicorn[standard]>=0.32.0,<1.0",
+    "python-multipart>=0.0.12",
+    "pydantic>=2.9.0,<3.0",
+    "pypdf>=5.0.0",
+    "openpyxl>=3.1.0",
+]
+
+[project.optional-dependencies]
+# 全部转换引擎（体积大，按需安装）
+full = [
+    "PyMuPDF>=1.24.0",
+    "pdf2docx>=0.5.8",
+    "pdfminer.six>=20231228",
+    "pdfplumber>=0.11.0",
+    "python-docx>=1.1.0",
+    "python-pptx>=1.0.0",
+    "mammoth>=1.8.0",
+    "mutagen>=1.47.0",
+    "paramiko>=3.4.0",
+    "cryptography>=43.0.0",
+    "playwright>=1.47.0",
+]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "ruff>=0.6.0",
+]
+
+[project.scripts]
+toolkit = "run:main"
+
+# ---------------------------------------------------------------- 构建
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
+
+# ---------------------------------------------------------------- 代码质量
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+# 静态资源是前端产物，不属于 Python 工程
+extend-exclude = ["app/static", "runtime", "storage"]
+
+[tool.ruff.lint]
+# E/W 风格  F 逻辑错误  I 导入排序  N 命名  UP 语法升级  B bugbear
+# SIM 简化  ANN 注解  RUF ruff 专有
+# BLE 裸 except / T20 print —— 这两组必须启用：
+#   源码里已有 48 处 `# noqa: BLE001`、6 处 `# noqa: T201` 依赖它们生效。
+#   规则未启用时 ruff 不消费 noqa，反而报 RUF100「未使用指令」，
+#   让原本"已评估过"的标记退化成误导性的死代码。
+#
+# 故意**不**启用 PLC0415（import-outside-top-level）：
+#   本项目在函数体内 import 是刻意设计 —— Playwright / PyMuPDF / mutagen 等
+#   引擎依赖均为可选安装，顶层导入会让「缺某个引擎」升级成「服务起不来」；
+#   另有若干模块靠惰性导入打断循环依赖。启用该规则会产生 90 处误报。
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "SIM", "ANN", "RUF",
+    "BLE", "T20",
+]
+ignore = [
+    # ANN101/102 已被上游废弃（self/cls 注解）
+    "ANN101",
+    "ANN102",
+    # 允许中文全角标点在 docstring/注释中（项目要求中文文档）
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    # 部分函数签名较长，强制换行反而降低可读性
+    "E501",
+    # 动态载荷（任务 inputs、JSON 解析结果）场景下 Any 无法避免
+    "ANN401",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试代码不必强制全量类型注解
+"tests/*" = ["ANN201", "ANN001", "ANN202"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------------------------------------------------------------- 测试
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# -ra 显示跳过/失败原因汇总，--strict-markers 防止写错标记名被静默忽略
+addopts = "-ra --strict-markers --tb=short"
+filterwarnings = [
+    # Starlette 对旧状态码常量的弃用提示：本项目保留常量语义清晰性，暂不跟进
+    "ignore::DeprecationWarning:starlette.*",
+]
+markers = [
+    "slow: 依赖外部引擎（LibreOffice/FFmpeg/Chromium）的端到端测试",
+]

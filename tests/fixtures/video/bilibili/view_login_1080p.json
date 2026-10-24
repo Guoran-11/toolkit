@@ -1,0 +1,48 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "bvid": "BV1Lg4y1x7mD",
+    "aid": 170002,
+    "videos": 1,
+    "tid": 21,
+    "tname": "日常",
+    "copyright": 1,
+    "pic": "https://i0.hdslb.com/bfs/archive/example-cover-login.jpg",
+    "title": "示例稿件：1080P 需登录才能取流",
+    "pubdate": 1760000100,
+    "ctime": 1760000100,
+    "desc": "自造脱敏样本：匿名只拿到 720P，1080P 需登录态。",
+    "state": 0,
+    "duration": 240,
+    "owner": {
+      "mid": 1000002,
+      "name": "示例UP主二号",
+      "face": "https://i0.hdslb.com/bfs/face/example-face-0002.jpg"
+    },
+    "stat": {
+      "aid": 170002,
+      "view": 2,
+      "danmaku": 0,
+      "reply": 0,
+      "favorite": 0,
+      "coin": 0,
+      "share": 0,
+      "like": 3
+    },
+    "dynamic": "",
+    "cid": 9000002,
+    "dimension": {"width": 1920, "height": 1080, "rotate": 0},
+    "pages": [
+      {
+        "cid": 9000002,
+        "page": 1,
+        "from": "vupload",
+        "part": "P1 正片",
+        "duration": 240,
+        "dimension": {"width": 1920, "height": 1080, "rotate": 0}
+      }
+    ]
+  }
+}

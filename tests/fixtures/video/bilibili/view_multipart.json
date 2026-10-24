@@ -1,0 +1,56 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "bvid": "BV1mp411c7mD",
+    "aid": 170003,
+    "videos": 2,
+    "tid": 21,
+    "tname": "日常",
+    "copyright": 1,
+    "pic": "https://i0.hdslb.com/bfs/archive/example-cover-multipart.jpg",
+    "title": "示例稿件：两集分P连播",
+    "pubdate": 1760000200,
+    "ctime": 1760000200,
+    "desc": "自造脱敏样本：多分P稿件。",
+    "state": 0,
+    "duration": 400,
+    "owner": {
+      "mid": 1000003,
+      "name": "示例UP主三号",
+      "face": "https://i0.hdslb.com/bfs/face/example-face-0003.jpg"
+    },
+    "stat": {
+      "aid": 170003,
+      "view": 3,
+      "danmaku": 0,
+      "reply": 0,
+      "favorite": 0,
+      "coin": 0,
+      "share": 0,
+      "like": 4
+    },
+    "dynamic": "",
+    "cid": 9000003,
+    "dimension": {"width": 1280, "height": 720, "rotate": 0},
+    "pages": [
+      {
+        "cid": 9000003,
+        "page": 1,
+        "from": "vupload",
+        "part": "P1 上半场",
+        "duration": 200,
+        "dimension": {"width": 1280, "height": 720, "rotate": 0}
+      },
+      {
+        "cid": 9000004,
+        "page": 2,
+        "from": "vupload",
+        "part": "P2 下半场",
+        "duration": 200,
+        "dimension": {"width": 1280, "height": 720, "rotate": 0}
+      }
+    ]
+  }
+}

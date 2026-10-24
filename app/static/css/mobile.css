@@ -1,0 +1,362 @@
+/* ==========================================================================
+   mobile.css — 手机端适配层（**必须最后加载**）
+
+   为什么单独一层：
+     tokens / base / layout / components / views 是「桌面优先」的组件定义，
+     本文件只回答一个问题 —— 同一个界面在手机上应该长什么样。
+     放在级联最末便于覆盖前层布局；整层回滚只需删掉 index.html 里的这一行。
+
+   断点约定：
+     ≤1024px                 平板：分栏改上下堆叠、Markdown 隐藏 TOC（前层已有）
+     ≤720px 或 触摸且矮屏     手机：底部标签栏 + 单列 + 触摸友好尺寸（本文件主体）
+     ≤380px                  超窄屏：进一步压缩留白与字号
+     横屏矮屏                 标签栏只留图标，把竖向空间还给内容
+
+   为什么手机层的条件不是单纯的 max-width:720px：
+     横屏手机的宽度是 640~900px（如 844×390），宽度断点抓不住它，
+     而它的真实约束是**高度**。用 (pointer: coarse) and (max-height: 520px)
+     兜住这一类视口，同时不会误伤"把桌面浏览器窗口压矮"的场景。
+
+   目录：
+     1. 尺寸变量与触摸基础
+     2. 底部标签栏（主导航下沉）
+     3. 顶栏 / 状态栏 / 安全区
+     4. 转换中心、音频工具：整页滚动 + 吸底主按钮
+     5. SSH 终端：表单限高，终端占满剩余空间
+     6. 表单控件的触摸尺寸（含 iOS 输入缩放防护）
+     7. 弹窗 → 底部抽屉
+     8. Toast / 表格 / 长文本换行
+   ========================================================================== */
+
+@media (max-width: 720px), (pointer: coarse) and (max-height: 520px) {
+
+  /* ======================================================================
+     1. 尺寸变量与触摸基础
+     ====================================================================== */
+  :root {
+    --h-topbar: 50px;
+    --h-statusbar: 26px;
+    /* 底部标签栏高度（不含安全区；安全区在具体规则里用 env() 叠加） */
+    --h-tabbar: 56px;
+  }
+
+  /* 触摸端点：去掉 300ms 双击缩放等待；点击高亮交给各自的 :active 反馈，
+     否则手机上每次点按钮都会闪一块灰蓝色，像"选中了文本" */
+  .btn,
+  .nav-item,
+  .segmented-item,
+  .tag,
+  a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 手机上没有 hover：把"悬停才有反馈"的交互改成按下即反馈 */
+  .nav-item:hover,
+  .btn--ghost:hover,
+  .segmented-item:hover {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .nav-item:active,
+  .segmented-item:active { opacity: 0.6; }
+
+  /* 长按选中文本在按钮上只会碍事（终端的文本选择由 xterm 自己处理） */
+  .btn,
+  .nav-item,
+  .segmented-item,
+  .panel-header { -webkit-user-select: none; user-select: none; }
+
+  /* ======================================================================
+     2. 底部标签栏：主导航下沉到拇指可及的位置
+     手机单手握持时顶部导航需要换手，底部标签栏是移动端事实标准。
+     ====================================================================== */
+  /* 给固定标签栏让出高度：内容区与状态栏都不会被它盖住 */
+  .app {
+    padding-bottom: calc(var(--h-tabbar) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    width: auto;
+    height: calc(var(--h-tabbar) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: grid;
+    /*
+      不要写死列数：模块数量是会变的（新增「地图定位」后就是 6 个），
+      repeat(5, …) 会让第 6 项被挤到第二行、把标签栏撑坏。
+      用自动列流让每一项始终平分宽度。
+    */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0;
+    overflow: visible;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .nav-item {
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    height: var(--h-tabbar);
+    padding: 0;
+    border-radius: 0;
+    font-size: 11px;
+  }
+  .nav-item[aria-current="page"] {
+    background: transparent;
+    color: var(--accent);
+  }
+  /* 选中态：顶部一小段指示条，比整块底色更接近原生 App 的观感 */
+  .nav-item[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    border-radius: 0 0 var(--r-full) var(--r-full);
+    background: var(--accent);
+  }
+  .nav-item .icon { width: 20px; height: 20px; }
+  .nav-item .nav-label {
+    font-size: 11px;
+    line-height: 1;
+    /* 6 个模块时每项只有 65px，长标题宁可省略也不能撑破标签栏 */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 任务徽标改成图标右上角的小角标，不再挤占竖排空间 */
+  .nav-badge {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    margin-left: 4px;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+
+  /* ======================================================================
+     3. 顶栏 / 状态栏 / 安全区
+     ====================================================================== */
+  .app-topbar {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    height: var(--h-topbar);
+    padding-left: max(var(--sp-3), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--sp-3), env(safe-area-inset-right, 0px));
+  }
+  .brand-mark { width: 28px; height: 28px; }
+  .app-topbar-actions { gap: var(--sp-1); }
+
+  .app-statusbar {
+    gap: var(--sp-2);
+    padding-left: max(var(--sp-3), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--sp-3), env(safe-area-inset-right, 0px));
+  }
+  #status-mode { max-width: 44vw; }
+  .statusbar-progress { min-width: 96px; max-width: 44vw; }
+
+  /* ======================================================================
+     4. 转换中心 / 音频工具：整页滚动
+     手机上一屏装不下"参数 + 结果"两块，分成两个各自滚动的小格子会让人
+     分不清在滚哪一块。改为视图本身作为唯一滚动容器，两块顺序排布。
+     ====================================================================== */
+  /*
+    注意 .is-active：
+      router 用 `.view { display:none }` 隐藏非当前视图，靠 `.view.is-active{display:grid}`
+      显示当前视图。本规则用了 ID 选择器（#view-converter），优先级高于 `.view`，
+      若不限定 .is-active，被切换走的转换页会**依然保持可见**，
+      表现为"底部标签栏点了没反应，一直停在转换页"。
+  */
+  #view-converter.is-active,
+  #view-audio.is-active {
+    display: block;
+    height: 100%;
+    overflow-y: auto;
+    /* 手机上页面一律不允许横向滑动：需要横向滚动的局部自己开滚动容器
+       （表格 .table-wrap、Markdown 工具栏、SSH 快捷键行、代码块都已自带）。
+       否则任何一个探出容器的元素都会让整页能被左右拖动。 */
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 其余视图（SSH / Markdown / 地图 / 任务）同样是「整页不横滑」 */
+  .view.is-active { overflow-x: hidden; }
+
+  /* 分隔条依赖精细拖拽，触摸屏上无法可靠命中，直接隐藏 */
+  .splitter { display: none; }
+
+  #view-converter .panel,
+  #view-audio .panel { height: auto; }
+
+  #view-converter .panel--left,
+  #view-audio .panel--left {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* 面板主体不再内部滚动，交给视图统一滚动 */
+  #view-converter .panel-body,
+  #view-audio .panel-body { overflow: visible; }
+
+  /* 主操作按钮吸底：滚到参数区任何位置都能直接点"开始" */
+  #view-converter .panel--left > .panel-footer,
+  #view-audio .panel--left > .panel-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--bg-surface);
+    box-shadow: 0 -1px 0 var(--border-subtle);
+  }
+
+  /* ======================================================================
+     4.1 Markdown 工具栏：手机上单行放不下
+     原布局是一整行「模式切换 + 目录 + 统计 + 打开文件 + 图片资源 + 导出 PDF/HTML」，
+     约 600px 宽，在 390px 屏上会被直接裁掉右侧按钮；同时右侧的统计块被挤成
+     一列竖排文字（实测：一行一两个字）。
+     处理：整行改为可横向滑动（一个 44px 高的工具条，所有功能都还在，文字标签保留），
+     统计块在手机上省略（它只是信息展示，却会把工具栏压变形）。
+     ====================================================================== */
+  .md-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .md-toolbar::-webkit-scrollbar { display: none; }
+  /* 工具栏内的元素不参与收缩，否则可滑动区域会塌成 0 */
+  .md-toolbar > * { flex: 0 0 auto; }
+  .md-toolbar > .grow { display: none; }
+  .md-toolbar .sep-v { display: none; }
+
+  /* ======================================================================
+     5. SSH 终端：终端必须保持固定高度
+     xterm 的 fit 依赖容器实际尺寸，若让终端随页面高度撑开就会失效。
+     因此保留上下两块：上方连接表单限高并可内部滚动，终端占满剩余空间。
+     ====================================================================== */
+  #view-ssh {
+    grid-template-columns: minmax(0, 1fr);
+    /* 只有两块（分隔条已隐藏）：表单自适应但限高，终端占满其余 */
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  #view-ssh .panel--left {
+    max-height: 42dvh;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* ======================================================================
+     6. 表单控件的触摸尺寸
+     ====================================================================== */
+  /* 触摸目标抬到 40px 上下：默认 34px 在手机上是"点不准"的典型尺寸 */
+  .btn { height: 40px; }
+  .btn--sm { height: 34px; }
+  .btn--icon { width: 40px; }
+  .btn--icon.btn--sm { width: 34px; }
+  .btn--lg { height: 44px; }
+  .segmented-item { height: 34px; padding: 0 var(--sp-4); }
+
+  /* iOS 会在 font-size < 16px 的输入框获得焦点时自动放大整个页面，
+     放大后既退不回去、又把布局挤乱。表单控件统一 16px 根治。 */
+  .input,
+  .select,
+  .textarea { font-size: 16px; min-height: 42px; }
+
+  .panel-header { min-height: 44px; padding: var(--sp-2) var(--sp-3); }
+  .panel-body { padding: var(--sp-3); }
+  .panel-footer { padding: var(--sp-3); }
+  .form-section + .form-section { margin-top: var(--sp-4); padding-top: var(--sp-4); }
+
+  /* ======================================================================
+     7. 弹窗 → 底部抽屉
+     手机竖屏下居中弹窗的顶部常超出拇指范围；贴底抽屉更易操作，
+     键盘弹出时也不会把弹窗顶出屏幕。
+     ====================================================================== */
+  .scrim {
+    align-items: end;
+    padding: var(--sp-2);
+    padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom, 0px));
+  }
+  .modal {
+    max-width: 100%;
+    max-height: min(92dvh, 100%);
+    border-radius: var(--r-xl) var(--r-xl) var(--r-md) var(--r-md);
+  }
+  .modal-header { padding: var(--sp-3) var(--sp-4); }
+  .modal-body { padding: var(--sp-4); }
+  .modal-footer {
+    flex-wrap: wrap;
+    padding: var(--sp-3) var(--sp-4);
+    padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
+  }
+  /* 底部按钮平分整行，避免"确认"缩在右下角难以点中 */
+  .modal-footer .btn { flex: 1 1 auto; }
+
+  /* ======================================================================
+     8. Toast / 表格 / 长文本换行
+     ====================================================================== */
+  /* Toast 上移到状态栏之上，否则会被底部标签栏压住 */
+  .toast-region {
+    left: var(--sp-3);
+    right: var(--sp-3);
+    width: auto;
+    bottom: calc(var(--h-tabbar) + var(--h-statusbar) + var(--sp-3) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 表格在窄屏下密集一些；横向滚动交给 .panel-body */
+  .table { font-size: var(--fs-xs); }
+  .table thead th,
+  .table tbody td { padding: var(--sp-2); }
+
+  /* 结果卡片：缩略图与内边距收窄，给文件名留出宽度 */
+  .result-card { gap: var(--sp-3); padding: var(--sp-3); }
+  .result-thumb { width: 44px; height: 44px; }
+  /* 长文件名 / 长路径一律换行，不再撑破卡片或触发横向滚动 */
+  .result-card .result-main > * { overflow-wrap: anywhere; }
+
+  /* 引擎自检行：手机上改成两行（名称一行、路径一行） */
+  .engine-row { flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
+  .engine-row .engine-name { width: auto; }
+  .engine-row code { flex: 1 1 100%; overflow-wrap: anywhere; }
+}
+
+/* ==========================================================================
+   9. 超窄屏（≤380px，如 iPhone SE）
+   ========================================================================== */
+@media (max-width: 380px) {
+  :root { --h-tabbar: 52px; }
+  .nav-item .nav-label { font-size: 10px; }
+  .panel-body { padding: var(--sp-2); }
+  .app-statusbar { font-size: 10px; }
+  #status-mode { max-width: 38vw; }
+}
+
+/* ==========================================================================
+   10. 横屏矮屏：竖向空间极紧张
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 480px) and (max-width: 900px) {
+  :root {
+    --h-tabbar: 46px;
+    --h-topbar: 42px;
+  }
+  /* 标签栏只留图标；状态栏整条让给内容 */
+  .nav-item .nav-label { display: none; }
+  .app-statusbar { display: none; }
+  #view-ssh .panel--left { max-height: 50dvh; }
+}

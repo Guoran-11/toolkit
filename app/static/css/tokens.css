@@ -1,0 +1,237 @@
+/* ==========================================================================
+   tokens.css — 设计令牌层
+   职责：唯一的视觉常量来源。所有组件只允许消费变量，不允许写死色值/尺寸。
+   主题策略：<html data-theme="light|dark">；未显式指定时跟随系统 prefers-color-scheme。
+   ========================================================================== */
+
+/* ---------- 1. 原始调色板（primitive） ---------- */
+:root {
+  /* 中性灰阶：冷调，适合长时间盯屏的工具类界面 */
+  --gray-0:  #ffffff;
+  --gray-25: #fbfcfe;
+  --gray-50: #f4f6fa;
+  --gray-100:#eaeef4;
+  --gray-200:#dde3ec;
+  --gray-300:#c7cfdb;
+  --gray-400:#9aa5b4;
+  --gray-500:#6f7a8a;
+  --gray-600:#525d6d;
+  --gray-700:#3b4553;
+  --gray-800:#262f3b;
+  --gray-850:#1c242e;
+  --gray-900:#141b23;
+  --gray-950:#0c1218;
+
+  /* 品牌主色（可换肤：改这几个值即可整站换色） */
+  --blue-300:#93bbfd;
+  --blue-400:#679eff;
+  --blue-500:#3b82f6;
+  --blue-600:#2563eb;
+  --blue-700:#1d4ed8;
+
+  /* 语义色 */
+  --green-400:#4ade80; --green-500:#22c55e; --green-600:#16a34a; --green-700:#15803d;
+  --amber-400:#fbbf24; --amber-500:#f59e0b; --amber-600:#d97706;
+  --red-400:  #f87171; --red-500:  #ef4444; --red-600:  #dc2626; --red-700:#b91c1c;
+  --violet-500:#8b5cf6;
+  --cyan-500: #06b6d4;
+}
+
+/* ---------- 2. 语义令牌：浅色主题（默认） ---------- */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* 背景层次：canvas(最底) → surface(面板) → elevated(浮层) → subtle(内嵌块) */
+  --bg-canvas:    var(--gray-50);
+  --bg-surface:   var(--gray-0);
+  --bg-elevated:  var(--gray-0);
+  --bg-subtle:    var(--gray-100);
+  --bg-inset:     var(--gray-200);
+  --bg-scrim:     rgb(12 18 24 / 0.42);
+
+  /* 文本：primary 用于正文与标题，muted 仅用于次要说明（对 --bg-surface 对比度 ≥ 4.5:1） */
+  --text-primary:   #101825;
+  --text-secondary: #4a5566;
+  --text-muted:     #6b7686;
+  --text-inverse:   var(--gray-0);
+  --text-on-brand:  var(--gray-0);
+
+  /* 描边 */
+  --border-subtle: var(--gray-200);
+  --border-default:var(--gray-300);
+  --border-strong: var(--gray-400);
+  --border-brand:  var(--blue-500);
+
+  /* 强调色（浅色下用深一档保证对比度） */
+  --accent:        var(--blue-600);
+  --accent-hover:  var(--blue-700);
+  --accent-soft:   #e8f0ff;
+  --accent-ring:   rgb(37 99 235 / 0.35);
+  --text-on-accent: var(--gray-0);
+
+  /* 语义状态 */
+  --success:       var(--green-600);
+  --success-soft:  #e7f7ed;
+  --warning:       var(--amber-600);
+  --warning-soft:  #fdf3e2;
+  --danger:        var(--red-600);
+  --danger-soft:   #fdeaea;
+  --info:          var(--cyan-500);
+  --info-soft:     #e4f7fb;
+
+  /* 代码 / 终端 */
+  --code-bg:      #f6f8fb;
+  --code-border:  var(--gray-200);
+  --code-text:    #1f2733;
+  --term-bg:      #10161d;
+  --term-fg:      #d3dde8;
+
+  /* 阴影：四档，逐级抬升 */
+  --shadow-1: 0 1px 2px rgb(16 24 37 / 0.06), 0 1px 1px rgb(16 24 37 / 0.04);
+  --shadow-2: 0 2px 4px rgb(16 24 37 / 0.06), 0 4px 12px rgb(16 24 37 / 0.08);
+  --shadow-3: 0 8px 20px rgb(16 24 37 / 0.10), 0 2px 6px rgb(16 24 37 / 0.06);
+  --shadow-4: 0 20px 44px rgb(16 24 37 / 0.18), 0 6px 14px rgb(16 24 37 / 0.10);
+
+  /* 骨架屏 / 遮罩 */
+  --skeleton: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 37%, var(--gray-100) 63%);
+}
+
+/* ---------- 3. 语义令牌：深色主题 ---------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-canvas:    var(--gray-950);
+  --bg-surface:   var(--gray-900);
+  --bg-elevated:  var(--gray-850);
+  --bg-subtle:    var(--gray-800);
+  --bg-inset:     #2b3542;
+  --bg-scrim:     rgb(0 0 0 / 0.62);
+
+  --text-primary:   #e8eef6;
+  --text-secondary: #b3bdcb;
+  --text-muted:     #8a95a4;
+  --text-inverse:   var(--gray-950);
+  --text-on-brand:  var(--gray-950);
+
+  --border-subtle: #232c37;
+  --border-default:#333e4c;
+  --border-strong: #4a5768;
+  --border-brand:  var(--blue-400);
+
+  --accent:        var(--blue-400);
+  --accent-hover:  var(--blue-300);
+  --accent-soft:   #16273f;
+  --accent-ring:   rgb(103 158 255 / 0.42);
+  --text-on-accent: #07121f;
+
+  --success:       var(--green-400);
+  --success-soft:  #122b1d;
+  --warning:       var(--amber-400);
+  --warning-soft:  #2e2411;
+  --danger:        var(--red-400);
+  --danger-soft:   #33191a;
+  --info:          #38d0e8;
+  --info-soft:     #0f2b33;
+
+  --code-bg:      #101821;
+  --code-border:  #25303d;
+  --code-text:    #dbe6f2;
+  --term-bg:      #0b1017;
+  --term-fg:      #d3dde8;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.40);
+  --shadow-2: 0 2px 6px rgb(0 0 0 / 0.44), 0 6px 16px rgb(0 0 0 / 0.34);
+  --shadow-3: 0 10px 26px rgb(0 0 0 / 0.50), 0 3px 8px rgb(0 0 0 / 0.36);
+  --shadow-4: 0 24px 52px rgb(0 0 0 / 0.62), 0 8px 18px rgb(0 0 0 / 0.44);
+
+  --skeleton: linear-gradient(90deg, #1a222c 25%, #232d39 37%, #1a222c 63%);
+}
+
+/* ---------- 4. 尺寸与排版刻度（与主题无关） ---------- */
+:root {
+  /* 间距：4px 基数，8px 节奏 */
+  --sp-1: 0.25rem;  --sp-2: 0.5rem;   --sp-3: 0.75rem;  --sp-4: 1rem;
+  --sp-5: 1.25rem;  --sp-6: 1.5rem;   --sp-7: 2rem;     --sp-8: 2.5rem;
+  --sp-9: 3rem;     --sp-10: 4rem;
+
+  /* 圆角 */
+  --r-xs: 4px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px; --r-full: 999px;
+
+  /* 字体族：中文优先落到系统黑体，避免首次加载字体导致的 FOIT */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+               "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei",
+               "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas,
+               "JetBrains Mono", "Liberation Mono", Menlo, monospace;
+
+  /* 字号 */
+  --fs-xs: 0.75rem;   /* 12px 辅助标注 */
+  --fs-sm: 0.8125rem; /* 13px 密集区正文 */
+  --fs-md: 0.875rem;  /* 14px 界面基准 */
+  --fs-lg: 1rem;      /* 16px 强调正文 */
+  --fs-xl: 1.25rem;   /* 20px 小标题 */
+  --fs-2xl: 1.5rem;   /* 24px 页面标题 */
+  --fs-3xl: 2rem;     /* 32px 大数字 */
+
+  --lh-tight: 1.25;
+  --lh-base: 1.55;
+  --lh-loose: 1.75;
+
+  /* 字重 */
+  --fw-normal: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+
+  /* 字距（中文正文不需要负字距，仅大标题微调） */
+  --ls-tight: -0.01em;
+  --ls-wide: 0.02em;
+
+  /* 布局常量 */
+  --h-topbar: 56px;      /* 顶栏高度 */
+  --h-statusbar: 34px;   /* 底部状态栏高度 */
+  --w-sidebar: 72px;     /* 图标侧栏宽度（中屏以上） */
+  --w-panel: 400px;      /* 左面板默认宽度 */
+  --w-panel-min: 320px;
+  --w-panel-max: 620px;
+  --w-content-max: 1600px;
+
+  /* 层级：集中管理，避免散落的魔数 */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 100;
+  --z-drawer: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+
+  /* 动效 */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+}
+
+/* 尊重系统"减少动态效果"设置：关掉过渡与动画，但保留最终状态可见性 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 高对比度偏好：加粗描边，保证低视力用户能分辨控件边界 */
+@media (prefers-contrast: more) {
+  :root {
+    --border-subtle: var(--border-default);
+    --border-default: var(--border-strong);
+  }
+}

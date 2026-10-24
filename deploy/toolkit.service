@@ -1,0 +1,88 @@
+# ============================================================================
+# 全能工具站（ToolKit）—— systemd 服务单元
+#
+# 放置：/etc/systemd/system/toolkit.service
+# 启用：
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now toolkit
+#     sudo systemctl status toolkit
+#     journalctl -u toolkit -f          # 实时日志
+#
+# 前置准备：
+#     1. 建立专用系统用户（不要用 root 跑 Web 服务）
+#          sudo useradd --system --create-home --shell /usr/sbin/nologin toolkit
+#     2. 部署代码到 /opt/toolkit 并归属该用户
+#          sudo cp -r . /opt/toolkit && sudo chown -R toolkit:toolkit /opt/toolkit
+#     3. 建虚拟环境并安装依赖
+#          sudo -u toolkit python3 -m venv /opt/toolkit/.venv
+#          sudo -u toolkit /opt/toolkit/.venv/bin/pip install -r /opt/toolkit/requirements.txt
+#     4. （可选）下载 Chromium：sudo -u toolkit /opt/toolkit/.venv/bin/playwright install chromium
+# ============================================================================
+
+[Unit]
+Description=全能工具站（ToolKit）—— 自托管文件处理工具站
+Documentation=file:/opt/toolkit/README.md
+# 只依赖网络就绪即可；本服务不依赖数据库等外部组件
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=toolkit
+Group=toolkit
+
+WorkingDirectory=/opt/toolkit
+
+# 用虚拟环境里的解释器，杜绝"系统 python 与依赖版本不符"的经典故障
+Environment="PATH=/opt/toolkit/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+# 生产环境强制开启鉴权（对应风险 R6）
+Environment="TOOLKIT_AUTH_REQUIRED=true"
+Environment="TOOLKIT_STORAGE_DIR=/var/lib/toolkit/storage"
+Environment="TOOLKIT_RUNTIME_DIR=/opt/toolkit/runtime"
+Environment="PYTHONUNBUFFERED=1"
+Environment="TZ=Asia/Shanghai"
+
+# 不自动打开浏览器（服务器无图形界面）
+ExecStart=/opt/toolkit/.venv/bin/python /opt/toolkit/run.py --host 127.0.0.1 --port 5000 --no-browser
+
+# 崩溃自愈：始终重启，但避免疯狂重启拖垮系统
+Restart=always
+RestartSec=3
+
+# ----------------------------------------------------------------------------
+# 安全加固（纵深防御：即使应用被攻破，攻击面也被限制在最小范围）
+# ----------------------------------------------------------------------------
+# 禁止获取新权限（含 setuid 提权）
+NoNewPrivileges=true
+# /usr、/boot 等只读，防止篡改系统文件
+ProtectSystem=strict
+# /home 不可访问
+ProtectHome=true
+# /tmp 私有化，避免与其他进程通过共享 tmp 交互
+PrivateTmp=true
+# 隐藏其他用户进程，防止信息泄露
+ProtectProc=invisible
+# 过滤危险系统调用（SSH 模块需要 socket，不能加 RestrictAddressFamilies 全部禁掉）
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# 禁止加载内核模块
+ProtectKernelModules=true
+# 禁止修改内核参数
+ProtectKernelTunables=true
+
+# 唯一可写目录：存储与运行时
+# ProtectSystem=strict 下必须显式声明可写路径，否则文件落盘会失败
+ReadWritePaths=/var/lib/toolkit /opt/toolkit/storage
+
+# 资源约束：防止单个大文件转换拖垮整机
+LimitNOFILE=65536
+MemoryMax=2G
+CPUQuota=200%
+
+# 日志走 journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=toolkit
+
+[Install]
+WantedBy=multi-user.target

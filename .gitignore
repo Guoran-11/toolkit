@@ -1,0 +1,90 @@
+# ============================================================================
+# 全能工具站（ToolKit）—— Git 忽略规则
+# ============================================================================
+
+# ---------------------------------------------------------------- 凭据与配置
+# 含口令哈希、SMTP 密码与主机信息，绝不入库
+.env
+.env.local
+config.local.toml
+# config.toml 现在同时保存管理员口令哈希与 SMTP 密码，必须忽略。
+# 需要入库的模板请另存为 config.example.toml（不含真实凭据）。
+config.toml
+storage/secret.key
+# Token 签名密钥的真实文件名是 storage/.secret（storage/ 整体已忽略）
+storage/.secret
+
+# ---------------------------------------------------------------- 运行时数据
+# 上传、临时文件、产物、任务表、审计日志 —— 全部是运行时生成，体积可能很大
+storage/
+runtime/
+
+# ---------------------------------------------------------------- Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+
+# ---------------------------------------------------------------- 测试与工具缓存
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+# 自检脚本的临时数据目录
+tests/.tmp/
+# _ops/verify_converter_fix.py 的自检沙箱（storage 快照 + 临时产物）
+.verify/
+
+# ---------------------------------------------------------------- 编辑器与系统
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------- 日志与临时
+*.log
+*.tmp
+*.bak
+*.orig
+nohup.out
+
+# ---------------------------------------------------------------- 模型/大文件
+# 若把离线引擎放进 runtime/，此处已被上面的 runtime/ 整体忽略
+*.zip
+*.tar.gz
+
+# ---------------------------------------------------------------- 本地运维与临时产物
+# 含服务器 IP / 域名 / 宝塔面板 MCP 地址等内部信息，绝不入库
+_ops/
+.piptmp/
+.pytest-tmp/
+# 本地工作记忆（含真实服务器信息、调试过程记录）
+.workbuddy/
+# 静态资源历史备份、pytest 临时沙箱、手工探测脚本
+_backup_static_*/
+pytest-of-*/
+pytest-cache-files-*/
+toolkit-test-*/
+_shots/
+.shots/
+_probe_test.bat
+_verify_step6.py
+# 二进制文档：由 docs/*.md 源文件重新生成即可，不入库
+docs/*.docx
+docs/*.pdf

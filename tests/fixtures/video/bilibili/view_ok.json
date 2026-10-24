@@ -1,0 +1,50 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "bvid": "BV1xx411c7mD",
+    "aid": 170001,
+    "videos": 1,
+    "tid": 21,
+    "tname": "日常",
+    "copyright": 1,
+    "pic": "https://i0.hdslb.com/bfs/archive/example-cover-0001.jpg",
+    "title": "示例稿件：三分钟看完本机文件处理",
+    "pubdate": 1760000000,
+    "ctime": 1760000000,
+    "desc": "自造脱敏样本，仅用于离线测试，不含任何真实稿件信息。",
+    "state": 0,
+    "duration": 187,
+    "owner": {
+      "mid": 1000001,
+      "name": "示例UP主",
+      "face": "https://i0.hdslb.com/bfs/face/example-face-0001.jpg"
+    },
+    "stat": {
+      "aid": 170001,
+      "view": 123456,
+      "danmaku": 678,
+      "reply": 90,
+      "favorite": 1000,
+      "coin": 200,
+      "share": 30,
+      "like": 5000,
+      "now_rank": 0,
+      "his_rank": 0
+    },
+    "dynamic": "",
+    "cid": 9000001,
+    "dimension": {"width": 1920, "height": 1080, "rotate": 0},
+    "pages": [
+      {
+        "cid": 9000001,
+        "page": 1,
+        "from": "vupload",
+        "part": "P1 正片",
+        "duration": 187,
+        "dimension": {"width": 1920, "height": 1080, "rotate": 0}
+      }
+    ]
+  }
+}

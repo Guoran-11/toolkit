@@ -1,0 +1,234 @@
+# ============================================================================
+# 全能工具站（ToolKit）配置模板 —— 本地免注册版
+#
+# 用法：复制本文件为 config.toml 后按需修改（config.toml 已被 .gitignore 忽略，
+#       不会进入版本库；本模板不含任何真实凭据，可直接提交）。
+#
+# 本文件的取向：**本机单人自用，开箱即用，不登录不注册**。
+#   · server.auth_required = false  → 打开就是控制面板，没有登录页
+#   · auth.allow_registration = false → 不开放注册（也没有账号体系负担）
+#   · email.enabled = false          → 不外发邮件，不依赖 SMTP
+#   · 所有凭据字段均已清空，可直接复制分发给他人
+#
+# 想暴露到局域网/公网？见 README「安全说明」，至少要把 auth_required 改回 true
+# （用 `python run.py --lan` 启动会自动强制开启鉴权）。
+#
+# 优先级：环境变量 > 本文件 > 内置默认值
+#   · 环境变量用于 Docker / CI 注入，键名见 app/core/config.py 的 _ENV_OVERRIDES
+#   · 本文件用于离线单机版的可视化编辑
+#   · 删除本文件不影响启动，全部字段回退默认值
+#
+# 修改后需重启服务生效。
+# ============================================================================
+
+[app]
+name = "全能工具站"
+codename = "ToolKit"
+version = "1.0.0"
+# demo_mode = true 时不会执行真实转换，仅回显（用于界面联调）
+demo_mode = false
+
+
+[server]
+# 仅本机访问。局域网暴露请用 `python run.py --lan`（会自动强制开启鉴权）
+host = "127.0.0.1"
+port = 5000
+# 单管理员模式
+username = "admin"
+# ★ 登录门禁开关：置 true 时，未登录访客只能看到登录页——
+#   前端主界面默认锁定（html[data-app-gate="locked"]），后端所有 /api 业务接口
+#   拒绝无 Token 请求，/healthz 也只返回「在线 + 需要登录」的最小事实。
+# 置 false 则免登录直接进入控制面板（仅适用于纯本机离线自用场景）。
+# 局域网暴露（--lan 或 allow_lan=true）会被强制置为 true（§9.1 第 6 条）。
+#
+# ★ 当前为「本地免注册版」：本机双击 start.bat / 运行 run.py 直接进入控制面板，
+#   不弹登录页、不需要注册。若要暴露到局域网或公网，务必改回 true。
+auth_required = false
+# 管理员口令的 SHA-256 摘要。留空时首次启动会生成随机初始密码并打印到控制台，
+# 登录后在「设置」页修改（修改会写回本字段）。
+# 安全约束：切勿在启用鉴权后把本文件提交到版本库。
+# 本地免注册模式下该字段无实际作用（仍可用于随时把 auth_required 改回 true 后登录）。
+password_hash = ""
+# 局域网暴露开关。置 true 会强制 auth_required = true（§9.1 第 6 条）
+allow_lan = false
+
+
+[limits]
+# 单文件上传上限（MB）。前端 config.js 的 limits 段需与此保持一致
+max_upload_mb = 100
+# 音频模块单文件上传上限（MB）。独立于上方通用上限：音频为流式转码，
+# 无损格式体积大，故单独放宽；前端 config.js 的 maxAudioUploadMb 需与此一致
+max_audio_upload_mb = 200
+# 单次批量上传文件数上限
+max_batch_files = 20
+# 转换任务并发工作线程数。建议不超过 CPU 核心数
+workers = 4
+# 单任务超时（秒）。LibreOffice 大文件转换较慢，可按需上调
+task_timeout_sec = 300
+# 产物保留时长（小时）。到期由后台清理线程删除。置 0 表示不自动清理
+output_ttl_hours = 24
+# 任务队列长度上限。超出时新提交返回 429（NFR-02）
+max_queue = 200
+
+
+[engines]
+# 外部可执行文件路径。可用「绝对路径」「相对项目根路径」或「裸命令名（走 PATH）」。
+# 缺失对应引擎时，相关功能会返回带安装指引的 503，而不是崩溃。
+
+# LibreOffice（Office ⇄ PDF、Office 互转）
+libreoffice = "runtime/libreoffice/program/soffice"
+# LibreOffice 单次调用超时（秒）（NFR-DC-01）
+libreoffice_timeout_sec = 120
+
+# FFmpeg（音频转码、解封装后的格式转换）
+ffmpeg = "runtime/ffmpeg/ffmpeg"
+
+# Chromium（HTML→PDF、Markdown 导出 PDF）
+chromium = "runtime/chromium/chrome"
+
+
+[ssh]
+# SSH 终端模块默认关闭 —— 风险 R6：避免误开成为公网跳板
+enabled = true
+# 仅允许连接内网目标（RFC1918 / 回环）。关闭需自行承担安全责任
+lan_only = true
+# 会话空闲超时（分钟）
+idle_timeout_min = 30
+# 是否记录操作审计日志（连接、命令、断开）
+audit_log = true
+# 最大并发会话数，防止资源耗尽
+max_sessions = 16
+
+
+[security]
+# SSH 目标主机白名单。空列表表示不限（NFR-SSH-04）
+# 示例：allowed_hosts = ["192.168.1.10", "192.168.1.20"]
+allowed_hosts = []
+# 是否下发严格 CSP。开发期可置 false 便于浏览器调试
+strict_csp = true
+# SSH 主机密钥策略：
+#   "auto"   首次连接自动信任（方便，但无法抵御中间人）
+#   "strict" 拒绝未知主机（安全，需先手工写入 known_hosts）
+ssh_host_key_policy = "auto"
+# 可信反向代理地址（IP 或 CIDR）。只有来自这些地址的请求，其 X-Forwarded-For
+# 才会被采信；否则任何人都能伪造来源 IP 绕过登录限流。回环地址始终可信。
+trusted_proxies = ["127.0.0.1", "::1"]
+
+
+# ============================================================================
+# 账号体系（邮箱注册 + 验证码）
+# ============================================================================
+[auth]
+# 是否开放邮箱注册。自托管工具默认关闭；开放前请先配好 [email]，
+# 否则用户收不到验证码，注册流程实际不可用。
+# ★ 本地免注册版为 false：单人自用不需要账号体系，避免误开注册入口。
+allow_registration = false
+# 新注册用户的默认角色：user / admin
+default_role = "user"
+# 注册是否必须邮箱验证码（关闭仅用于内网调试，生产务必保持 true）
+# 本地免注册版不涉及注册流程，故一并置 false。
+require_email_verification = false
+# 登录是否叠加邮箱验证码（二次验证，更安全但更繁琐）
+login_require_code = false
+# 密码最小长度
+min_password_length = 8
+# 验证码有效期（秒）
+code_ttl_sec = 300
+# 同一邮箱重发验证码的最小间隔（秒）
+code_resend_sec = 60
+# 单个验证码允许的最大校验尝试次数
+code_max_attempts = 5
+# 同一 IP 每小时最多发码次数（防刷）
+code_ip_hourly_limit = 20
+# 注册用户默认状态：active（直接可用）/ pending（需管理员审批）
+default_status = "active"
+
+
+# ============================================================================
+# 发信（SMTP）—— 自建 BillionMail / 企业邮箱 / 第三方邮件服务都走这里
+# ============================================================================
+[email]
+# 置 false 时退化为「日志发送器」：验证码写入日志不外发，便于本地联调。
+# ★ 本地免注册版为 false：不开放注册、不需要找回密码，也就无需外发邮件。
+#   如需开启注册，把 enabled 改 true 并填好 host / username / password / from_address。
+enabled = false
+# SMTP 服务器地址
+host = ""
+# 465=SSL  587=STARTTLS  25=明文
+port = 587
+# ssl | starttls | none
+security = "starttls"
+# 是否校验服务器 TLS 证书。自建邮件服务器常用自签名证书，
+# 置 false 才能发信；公网第三方服务请保持 true。
+tls_verify = true
+# 发信账号（完整邮箱地址）
+username = ""
+# ⚠️ 邮箱密码 / SMTP 授权码。切勿提交到版本库。
+password = ""
+# 发件人地址；留空则使用 username
+from_address = ""
+# 发件人显示名
+from_name = "全能工具站"
+# SMTP 超时（秒）
+timeout_sec = 15
+# 站点对外访问地址，用于邮件正文中的链接。
+# 中文域名用 punycode（IDN）形式，邮件客户端与浏览器才能可靠解析。
+site_url = "http://127.0.0.1:5000"
+
+
+# ============================================================================
+# 短信（可插拔）—— 默认只写日志；接自建网关后改为 webhook
+# ============================================================================
+[sms]
+enabled = false
+# log（只写日志）| webhook（POST 到自建网关）
+provider = "log"
+# 网关地址，形如 https://sms.example.com/send
+webhook_url = ""
+# 网关鉴权 Token（可选，会以 Bearer 头发送）
+webhook_token = ""
+# 短信签名（若网关需要）
+sign_name = ""
+# 请求超时（秒）
+timeout_sec = 10
+
+
+# ============================================================================
+# 视频下载（抖音 / B站 / 快手 作品链接解析与后台下载）
+#
+#   · 解析与下载全部在本机/内网完成，链接不外泄；不做去水印、不碰付费/会员/DRM
+#   · 产物进入统一任务中心（module=video），默认保留 24 小时后自动删除
+#   · 公网部署请把 enabled 置 false：平台 ToS 与当地法律风险由部署者承担
+# ============================================================================
+[video]
+# 模块总开关。false 时所有 /api/video/* 返回 503 SERVICE_DISABLED
+enabled = true
+# 默认清晰度偏好：4K / 1080P / 720P / 480P（默认策略永远不会自动选中 4K）
+prefer_quality = "1080P"
+# 默认输出容器：mp4 / mp3 / m4a
+prefer_format = "mp4"
+# 同时下载任务数（1-4）。过高易触发平台风控
+max_concurrent = 2
+# 单任务分片并发（1-8）
+download_segments = 4
+# 分片大小（MB）
+segment_size_mb = 2
+# 单文件大小上限（MB）。超出任务失败 OUTPUT_TOO_LARGE
+max_file_mb = 2048
+# 视频任务超时（秒）。大文件建议保持 600 或更高
+task_timeout_sec_video = 600
+# 解析结果缓存（秒）。同一作品反复点解析不会重复请求平台
+parse_cache_ttl_sec = 600
+# 产物复用窗口（小时）。窗口内重复下载直接复用已有产物
+dedupe_window_hours = 24
+# 最低可用磁盘（GB）。低于阈值拒绝提交新任务（507 DISK_FULL）
+min_free_gb = 2
+# 单次最多解析链接数
+max_urls = 20
+# 历史记录条数上限
+history_limit = 200
+# 平台开关。版权方/平台通知时可单独下线某个平台（1 分钟内生效）
+platforms.douyin = { enabled = true }
+platforms.bilibili = { enabled = true }
+platforms.kuaishou = { enabled = true }
+
